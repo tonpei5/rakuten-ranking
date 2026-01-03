@@ -3,7 +3,9 @@ export async function onRequest(context) {
   const genre = url.searchParams.get("genre") || "112203";
 
   const appId = context.env.RAKUTEN_APP_ID;
-  if (!appId) {
+  const AFF_ID = context.env.RAKUTEN_AFFILIATE_ID;
+
+  if (!appId || !AFF_ID) {
     return new Response(
       JSON.stringify({ error: "RAKUTEN_APP_ID not set" }),
       { status: 500 }
@@ -12,7 +14,9 @@ export async function onRequest(context) {
 
   const apiUrl =
     `https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20170628` +
-    `?applicationId=${appId}&genreId=${genre}`;
+    `?applicationId=${appId}` +
+    `&affiliateId=${AFF_ID}` + 
+    `&genreId=${genre}`;
 
   try {
     const res = await fetch(apiUrl);
@@ -22,7 +26,7 @@ export async function onRequest(context) {
       name: i.Item.itemName,
       price: i.Item.itemPrice,
       image: i.Item.mediumImageUrls?.[0]?.imageUrl || "",
-      url: i.Item.itemUrl
+      url: i.Item.affiliateUrl // ← 収益化の核心
     }));
 
     return new Response(JSON.stringify({ items }), {
